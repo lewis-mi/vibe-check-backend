@@ -1,17 +1,18 @@
 #!/bin/bash
 set -e
 
-# Configuration from your deploy.yml
-PROJECT_ID="gen-lang-client-0765258695"
-PROJECT_NUMBER="142444819227"
-POOL_NAME="gh-pool"
-PROVIDER_NAME="gh-provider"
-SERVICE_ACCOUNT_NAME="gh-actions-deployer"
+# Configuration - can be overridden via environment variables
+PROJECT_ID="${PROJECT_ID:-gen-lang-client-0765258695}"
+PROJECT_NUMBER="${PROJECT_NUMBER:-142444819227}"
+POOL_NAME="${POOL_NAME:-gh-pool}"
+PROVIDER_NAME="${PROVIDER_NAME:-gh-provider}"
+SERVICE_ACCOUNT_NAME="${SERVICE_ACCOUNT_NAME:-gh-actions-deployer}"
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
-REGION="us-east4"
+REGION="${REGION:-us-east4}"
 
-# GitHub repository (update this with your actual GitHub org/repo)
-GITHUB_REPO="lewis-mi/vibe-check-backend"
+# GitHub repository - can be overridden via environment variable
+GITHUB_REPO="${GITHUB_REPO:-lewis-mi/vibe-check-backend}"
+REPO_OWNER="${GITHUB_REPO%/*}"
 
 echo "=== Setting up Workload Identity Federation for GitHub Actions ==="
 echo "Project: ${PROJECT_ID}"
@@ -53,7 +54,7 @@ else
     --workload-identity-pool="${POOL_NAME}" \
     --issuer-uri="https://token.actions.githubusercontent.com" \
     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-    --attribute-condition="assertion.repository_owner == 'lewis-mi'" \
+    --attribute-condition="assertion.repository_owner == '${REPO_OWNER}'" \
     --project="${PROJECT_ID}"
 fi
 
@@ -74,18 +75,15 @@ echo ""
 echo "5. Granting permissions to service account..."
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-  --role="roles/run.admin" \
-  --condition=None
+  --role="roles/run.developer"
 
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-  --role="roles/storage.admin" \
-  --condition=None
+  --role="roles/storage.objectAdmin"
 
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-  --role="roles/iam.serviceAccountUser" \
-  --condition=None
+  --role="roles/iam.serviceAccountUser"
 
 # Allow GitHub Actions to impersonate the service account
 echo ""
