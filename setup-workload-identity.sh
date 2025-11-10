@@ -52,7 +52,8 @@ else
     --location="global" \
     --workload-identity-pool="${POOL_NAME}" \
     --issuer-uri="https://token.actions.githubusercontent.com" \
-    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+    --attribute-condition="assertion.repository_owner == 'lewis-mi'" \
     --project="${PROJECT_ID}"
 fi
 
