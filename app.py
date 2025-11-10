@@ -1,20 +1,13 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
 
-# Enable CORS for your frontend domains
+# Allow requests only from your frontend
 CORS(app, resources={r"/*": {"origins": [
     "https://vibechecklab.app",
-    "https://www.vibechecklab.app"
+    "https://www.vibechecklab.app",
+    "http://localhost:5173"  # Optional, for local dev
 ]}})
 
-@app.get("/health")
-def health():
-    return {"ok": True}
-
-# Your other routes (e.g., /analyze) go below here
-@app.post("/analyze")
-def analyze():
-    # your logic here
-    return {"status": "analyzed"}
+@app
