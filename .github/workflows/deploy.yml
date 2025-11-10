@@ -1,0 +1,55 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ "main" ]   # adjust if needed
+
+permissions:
+  contents: read
+  id-token: write   # required for OIDC
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to Google Cloud (OIDC)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/142444819227/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider"
+          service_account: "gh-actions-deployer@gen-lang-client-0765258695.iam.gserviceaccount.com"
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: gen-lang-client-0765258695
+
+      # Option A: Deploy from source (no Dockerfile needed; uses buildpacks)
+      - name: Deploy to Cloud Run from source
+        run: |
+          gcloud run deploy vibe-check-backend \
+            --source . \
+            --region us-east4 \
+            --allow-unauthenticated
+
+      # ---- OR ----
+      # Option B: Build a container image and deploy it (uncomment if you prefer Docker)
+      # - name: Configure Docker auth for Artifact Registry
+      #   run: gcloud auth configure-docker us-east4-docker.pkg.dev --quiet
+      #
+      # - name: Build & push image
+      #   run: |
+      #     SHORT_SHA=$(git rev-parse --short HEAD)
+      #     IMAGE="us-east4-docker.pkg.dev/gen-lang-client-0765258695/vibecheck-registry/vibe-check-backend:${SHORT_SHA}"
+      #     docker build -t "$IMAGE" .
+      #     docker push "$IMAGE"
+      #
+      # - name: Deploy image
+      #   run: |
+      #     gcloud run deploy vibe-check-backend \
+      #       --image "$IMAGE" \
+      #       --region us-east4 \
+      #       --allow-unauthenticated
