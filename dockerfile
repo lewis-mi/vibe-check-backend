@@ -23,6 +23,5 @@ COPY . /app
 # Cloud Run expects the server to listen on $PORT (default 8080)
 ENV PORT=8080
 
-# Use gunicorn to serve Flask app named "app" from app.py
-# If your main file or app variable is named differently, adjust "app:app"
-CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 120 app:app
+# Use gunicorn to serve Flask app named "app" from main.py
+CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 120 main:app
